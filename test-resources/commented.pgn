@@ -1,0 +1,13 @@
+[Event "..event.."]
+[Site "..site.."]
+[Date "1970.01.01"]
+[Round "..round.."]
+[White "..white-player-name.."]
+[WhiteElo "..white-player-elo.."]
+[Black "..black-player-name.."]
+[BlackElo "..black-player-elo.."]
+[Variant "..variant.."]
+[Result "..result.."]
+
+1. ..m-w-1.. {..comment-m-w-1-1..} {..comment-m-w-1-2..} ..m-b-1.. {..comment-m-b-1-1..} ..result..
+
