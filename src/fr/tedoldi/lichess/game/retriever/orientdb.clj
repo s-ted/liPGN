@@ -5,6 +5,8 @@
     clojure.data
     [clojure.data.json :as json])
   (:import (java.io PrintWriter)
+
+           (com.orientechnologies.orient.core.sql OCommandSQL)
            (com.orientechnologies.orient.core.record.impl ODocument)
            (com.orientechnologies.orient.core.db.document ODatabaseDocumentPool ODatabaseDocumentTx)
            (com.orientechnologies.orient.core.query OQuery)
@@ -225,21 +227,41 @@
 
 
 
+(defn- -execute [db command & args]
+  (->> command
+       OCommandSQL.
+       (.command db)
+       (#(.execute % args))))
 
 
 
 (defn- initialize-blank-db [Dal]
-  (create-with-id!
-    Dal
-    "user"
-    "dummy"
-    {:username "dummy"})
+  (let [db (pool->db (:config Dal))]
+    (try
+      (-execute db "CREATE CLASS user")
+      (-execute db "CREATE PROPERTY user._id STRING")
+      (-execute db "CREATE PROPERTY user.username STRING")
+      (create-with-id!
+        Dal
+        "user"
+        "dummy"
+        {:username "dummy"})
+      (-execute db "CREATE INDEX user._id ON user (_id) UNIQUE")
+      (-execute db "CREATE INDEX user.username ON user (username) UNIQUE")
 
-  (create-with-id!
-    Dal
-    "game"
-    "dummy"
-    {:username "dummy"}))
+      (-execute db "CREATE CLASS game")
+      (-execute db "CREATE PROPERTY game._id STRING")
+      (-execute db "CREATE PROPERTY game.username STRING")
+      (create-with-id!
+        Dal
+        "game"
+        "dummy"
+        {:username "dummy"})
+      (-execute db "CREATE INDEX game._id ON game (_id) UNIQUE")
+      (-execute db "CREATE INDEX game.username ON game (username) UNIQUE")
+
+      (finally
+        (.close db)))))
 
 
 
