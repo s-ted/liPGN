@@ -10,6 +10,7 @@
     [fr.tedoldi.lichess.game.retriever.console :as console]))
 
 (def ^:private nice-downloader-waiting-time 300)
+(def ^:private even-nicer-downloader-waiting-time 30000)
 
 (defn username->user [url username]
   (let [url (str url "/user/" username)]
@@ -29,7 +30,14 @@
             e))))))
 
 
-(defn- -games-url->games [url max-per-page page]
+(defn- -games-url->games [url max-per-page page total-pages]
+  (-> (str "Downloading page " (inc page) "/" total-pages ".\n")
+      color/cyan
+      console/print-err)
+
+  (when (pos? page)
+    (Thread/sleep nice-downloader-waiting-time))
+
   (try
     (-> url
         (client/get {:query-params
@@ -52,8 +60,8 @@
           (-> (str "Lichess is rate-limiting us, waiting 30s...\n")
               color/cyan
               console/print-err)
-          (Thread/sleep 30000)
-          (-games-url->games url max-per-page page))
+          (Thread/sleep even-nicer-downloader-waiting-time)
+          (-games-url->games url max-per-page page total-pages))
 
         ; else
         (throw e)))))
@@ -74,32 +82,24 @@
 
                          :nbResults)
 
-        nb-pages     (-> nb-results
-                       (/ max-per-page)
-                       Math/ceil
-                       int)]
-    (-> (str "Found " nb-results " games ~ " nb-pages " pages to sync.\n")
+        total-pages  (-> nb-results
+                         (/ max-per-page)
+                         Math/ceil
+                         int)]
+
+    (-> (str "Found " nb-results " games ~ " total-pages " pages to sync.\n")
         color/cyan
         console/print-err)
 
-    (reduce
-      (fn [C page]
-        (-> (str "Downloading page " (inc page) "/" nb-pages ".\n")
-        color/cyan
-        console/print-err)
+    (let [page-nb->game (comp
 
-        (let [page-games (-games-url->games url max-per-page page)
-              games (filter
-                      #(or
-                         (nil? since-timestamp)
-                         (> (:timestamp % ) since-timestamp))
-                      page-games)]
-        (if (= games page-games)
-          (let [result (concat C games)]
-            (Thread/sleep nice-downloader-waiting-time)
-            result)
+                          (filter (fn [{:keys [timestamp]}]
+                                    (or
+                                      (nil? since-timestamp)
+                                      (and timestamp
+                                           (> timestamp since-timestamp)))))
 
-         ;else
-         (reduced (concat C games)))))
-      []
-      (range nb-pages))))
+                          (map #(-games-url->games url max-per-page % total-pages)))]
+      (lazy-cat
+        (sequence page-nb->game
+                  (range total-pages))))))
