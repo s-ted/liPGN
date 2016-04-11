@@ -9,10 +9,16 @@
            (com.orientechnologies.orient.core.sql OCommandSQL)
            (com.orientechnologies.orient.core.record.impl ODocument)
            (com.orientechnologies.orient.core.db.document ODatabaseDocumentPool ODatabaseDocumentTx)
+           (com.orientechnologies.orient.core.id ORecordId)
            (com.orientechnologies.orient.core.query OQuery)
            (com.orientechnologies.orient.core.sql.query OSQLSynchQuery)))
 
 
+
+(defprotocol LichessDal
+
+  (username->games [this username])
+  (username->last-game [this username]))
 
 
 
@@ -302,6 +308,72 @@
         (.close db)))))
 
 
+(def ^:private undefined-ORecordId
+  (ORecordId. -1 -1))
+
+(defn- -username->games-paginated
+  ([dal username] (-username->games-paginated dal
+                                              username
+                                              undefined-ORecordId))
+
+  ([dal username lower-rid]
+   (let [page-size 100
+         query     (OSQLSynchQuery. (str "SELECT FROM game"
+                                         " WHERE "
+                                         "       userId = ?"
+                                         "   AND @rid > " lower-rid
+                                         " LIMIT " page-size)
+                                    page-size)
+         db        (pool->db (:config dal))]
+     (try
+
+       (let [items (seq
+                     (-> db
+                         .activateOnCurrentThread
+
+                         (.query ^OSQLSynchQuery query (to-array [username]))))]
+         (when items
+           (cons items
+                 (-username->games-paginated
+                   dal
+                   username
+                   (.getIdentity (last items))))))
+
+       (catch java.lang.IllegalArgumentException e nil)
+
+       (finally
+         (.close db))))))
+
+(defn- -find-all-deep-paginated
+  ([dal collection] (-find-all-deep-paginated dal
+                                              collection
+                                              undefined-ORecordId))
+
+  ([dal collection lower-rid]
+   (let [page-size 100
+         query     (OSQLSynchQuery. (str "SELECT FROM " (kw->oclass-name collection)
+                                         " WHERE @rid > " lower-rid
+                                         " LIMIT " page-size)
+                                    page-size)
+         db        (pool->db (:config dal))]
+     (try
+
+       (let [items (seq
+                     (-> db
+                         .activateOnCurrentThread
+
+                         (.query ^OSQLSynchQuery query nil)))]
+         (when items
+           (cons items
+                 (-find-all-deep-paginated
+                   dal
+                   collection
+                   (.getIdentity (last items))))))
+
+       (catch java.lang.IllegalArgumentException e nil)
+
+       (finally
+         (.close db))))))
 
 
 
@@ -367,28 +439,17 @@
   (find-all-deep
     [this collection request]
 
-    (let [db (pool->db config)]
-      (try
 
-        (.activateOnCurrentThread db)
+    (flatten
+      (lazy-cat
+        (map
+          (fn [raw-items]
+            (->> raw-items
+                 (map ODocument->map)
+                 (remove :sentinel)
 
-        (->> collection
-             kw->oclass-name
-
-             (.browseClass db)
-             iterator-seq
-
-             (map ODocument->map)
-
-             (filter #(not (second (clojure.data/diff % request))))
-             (remove :sentinel)
-
-             (into []))
-
-        (catch java.lang.IllegalArgumentException e [])
-
-        (finally
-          (.close db)))))
+                 (filter #(not (second (clojure.data/diff % request))))))
+          (-find-all-deep-paginated this collection)))))
 
 
   (find-by-id
@@ -477,4 +538,43 @@
   (patch!
     [this collection id item]
     (let [document (find-by-id this collection id)]
-      (update! this collection id (merge document item)))))
+      (update! this collection id (merge document item))))
+
+  LichessDal
+
+  (username->games
+    [this username]
+
+    (flatten
+      (lazy-cat
+        (map
+          (fn [raw-items]
+            (->> raw-items
+                 (map ODocument->map)
+                 (remove :sentinel)))
+          (-username->games-paginated this username)))))
+
+  (username->last-game
+    [this username]
+
+    (let [query     (OSQLSynchQuery. (str "SELECT FROM game"
+                                          " WHERE userId = ?"
+                                          " ORDER BY timestamp DESC"
+                                          " LIMIT " 1)
+                                     1)
+          db        (pool->db config)]
+      (try
+        (-> db
+            .activateOnCurrentThread
+
+            (.query ^OSQLSynchQuery query (to-array [username]))
+            seq
+            first
+            (#(when %
+                (when-not (:sentinel %)
+                  (ODocument->map %)))))
+
+        (catch java.lang.IllegalArgumentException e nil)
+
+        (finally
+          (.close db))))))
