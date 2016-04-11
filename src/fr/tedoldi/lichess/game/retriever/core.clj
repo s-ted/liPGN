@@ -12,6 +12,13 @@
     [fr.tedoldi.lichess.game.retriever.orientdb :as dal]))
 
 
+(defn- -parse-csv-param [param]
+  (->> (str/split (str param) #",")
+       (map str/trim)
+       (remove str/blank?)
+       (map str/lower-case)
+       (into #{})))
+
 (defn export! [{:keys [quiet url casual variant speed
                        output store no-sync username
                        color]
@@ -39,7 +46,10 @@
           color/blue
           console/print-err)
 
-      (let [games (game/username->games
+      (let [variants (-parse-csv-param variant)
+            speeds   (-parse-csv-param speed)
+
+            games (game/username->games
                     dal
                     username
                     #(and
@@ -51,13 +61,13 @@
                          true
                          (:rated %))
 
-                       (if speed
-                         (= speed (:speed %))
-                         true)
+                       (if (empty? speeds)
+                         true
+                         (contains? speeds (str/lower-case (:speed %))))
 
-                       (if variant
-                         (= variant (:variant %))
-                         (not= "fromPosition" (:variant %)))))]
+                       (if (empty? variants)
+                         (not= "fromPosition" (:variant %))
+                         (contains? variants (str/lower-case (:variant %))))))]
 
         (-> (str "Parsing " (count games) " games...\n")
           color/blue

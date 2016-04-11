@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file. This change
 - Allow move time display using --with-times
 - Templates are overridable (--template-pgn, --template-move-pair)
 
+### Changed
+- Allow multiple speed or variant to be given as params
+
 ## [1.1.0] - 2016-04-11
 ### Changed
 - Improve computation speed

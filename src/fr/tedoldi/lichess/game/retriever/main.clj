@@ -30,8 +30,8 @@
 (def ^:private cli-options
   [["-q" "--quiet"               "Don't output messages on console"                                                :default false]
    ["-C" "--casual"              "Also handle casual games"                                                        :default false]
-   ["-v" "--variant <variant>"   "Handle games for the given variant (standard/chess960/kinfOfTheHill/threeCheck)" :default "standard"]
-   ["-p" "--speed <speed>"       "Handle games for the given speed (bullet/blitz/classical/unlimited)"]
+   ["-v" "--variant <v1,v2...>"  "Handle games for the given variant (standard/chess960/kinfOfTheHill/threeCheck/racingKings/horde/crazyHouse/antichess/atomic)" :default "standard"]
+   ["-p" "--speed <s1,s2...>"    "Handle games for the given speed (bullet/blitz/classical/unlimited). By default: all."]
    ["-U" "--url <URL>"           "URL of the API"                                                                  :default "http://en.lichess.org/api/"]
    ["-s" "--store <store>"       "The store to use for keeping the data (use 'memory:tmp' for a transient run)"    :default "plocal:db"]
    ["-c" "--color <color>"       "Handle games for the given color (white/black)"]
