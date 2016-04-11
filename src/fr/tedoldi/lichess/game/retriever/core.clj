@@ -33,6 +33,11 @@
         (-> "By-passing sever sync\n" color/yellow console/print-err)
         (game/update-user dal url username))
 
+
+      (-> (str "Crunching data, this may take a while...\n")
+          color/blue
+          console/print-err)
+
       (let [games (game/username->games
                     dal
                     username
@@ -52,8 +57,13 @@
                        (if variant
                          (= variant (:variant %))
                          (not= "fromPosition" (:variant %)))))]
+
+        (-> (str "Parsing " (count games) " games...\n")
+          color/blue
+          console/print-err)
+
         (->> games
-             (map pgn/game->pgn)
+             (pmap pgn/game->pgn)
              clojure.string/join
              (spit out))
 

@@ -51,7 +51,7 @@
       (let [games (lichess/username->games url
                                            username
                                            last-game-timestamp)]
-        (-> (str "Found " (count games) " new games.\nCrunching data, this may take a while...\n")
+        (-> (str "Found " (count games) " new games.\n")
             color/blue
             console/print-err)
 
@@ -67,10 +67,8 @@
 
 (defn username->games
   ([dal username]
-   (username->games dal username (constantly true)))
+   (dal/find-all-deep dal "game" {:userId username}))
 
   ([dal username custom-filter]
-   (->> "game"
-        (dal/find-all-deep dal)
-        (filter #(= username (:userId %)))
+   (->> (username->games dal username)
         (filter custom-filter))))
