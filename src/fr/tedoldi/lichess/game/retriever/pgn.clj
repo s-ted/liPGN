@@ -23,47 +23,56 @@
     (str this))
 
   clojure.lang.IPersistentMap
-  (->str [{:keys [move comments]}]
-    (str move
-         (->> comments
-              (map #(str " {" % "}"))
-              str/join))))
+  (->str [{:keys [move comments time]}]
+    (let [comments (if time
+                     (conj comments
+                           (str time "s"))
 
+                     ;else
+                     comments)]
+      (str move
+           (if comments
+             (str " {" (str/join " " comments) "}"))))))
 
-(defn moves->pgn [moves]
+(def ^:private -get-file-content
+  (memoize
+    (fn [file-path]
+      (-> file-path
+          slurp))))
+
+(defn moves->pgn [moves
+                  {:keys [white black] :as players}
+                  {:keys [template-move-pair]}]
   (->> moves
        (partition 2)
-       (reduce
-         (fn [[pgn n] [white black]]
-           [(str pgn n ". " (->str white) " " (->str black) " ")
-            (inc n)])
-         ["" 1])
-       first))
+       (map-indexed
+         (fn [n [move-white move-black]]
+           (let [template-vars {:n     (inc n)
+                                :white (->str move-white)
+                                :black (->str move-black)}]
+             (if template-move-pair
+               (clostache/render (-get-file-content template-move-pair) template-vars)
+               (clostache/render-resource "templates/move-pair.mustache" template-vars)))))
+       str/join))
 
 
 
-(defn pgn->str [{:keys [event site timestamp round players
-                        variant result moves]
-                 :as pgn}]
-  (let [black  (:black players)
-        white  (:white players)
-
-        date (->> timestamp
-                  c/from-long
-                  (f/unparse date-formatter))
-
-        template-vars
+(defn pgn->str [{:keys [moves players]
+                 :as pgn}
+                {:keys [template-pgn]
+                 :as options}]
+  (let [template-vars
         (-> pgn
-            (select-keys [:event :site :round :variant :result
-                          :players])
-            (assoc :date  date
-                   :moves (moves->pgn moves)))]
+            (assoc :moves (moves->pgn moves players options)))]
 
-    (clostache/render-resource "templates/pgn.mustache" template-vars)))
+    (if template-pgn
+      (clostache/render (-get-file-content template-pgn) template-vars)
+      (clostache/render-resource "templates/pgn.mustache" template-vars))))
 
 
 (defn game->pgn [{:keys [id moves timestamp players winner
-                         variant speed url analysis]}]
+                         variant speed url analysis]}
+                 {:keys [with-times] :as options}]
 
   (let [result (case winner
                  "black" "0-1"
@@ -72,25 +81,53 @@
         black  (:black players)
         white  (:white players)
 
-        date (->> timestamp
-                  c/from-long
-                  (f/unparse date-formatter))]
+        date   (->> timestamp
+                    c/from-long
+                    (f/unparse date-formatter))
 
-    (-> {:event id
-         :site speed
-         :date date
-         :round url
-         :players {:white {:name (:userId white)
-                           :elo  (:rating white)}
-                   :black {:name (:userId black)
-                           :elo  (:rating black)}}
+        moves  (str/split moves #"\s")
+
+        display-move-times? (and
+                              with-times
+                              (= (+
+                                  (count (:moveTimes white))
+                                  (count (:moveTimes black)))
+                                 (count moves)))
+
+        moves   (if display-move-times?
+                  (map-indexed
+                    (fn [i move]
+                      {:move move
+                       :time (-> (if (zero? (mod i 2)) white black)
+                                 :moveTimes
+                                 (nth (/ i 2))
+                                 (/ 10)
+                                 float)})
+                    moves)
+
+                  ;else
+                  moves)]
+    (-> {:id      id
+         :speed   speed
+         :date    date
+         :url     url
+         :players {:white {:name       (:userId white)
+                           :elo        (:rating white)
+                           :moveTimes  (when display-move-times?
+                                         (map #(float (/ % 10))
+                                              (:moveTimes white)))}
+                   :black {:name       (:userId black)
+                           :elo        (:rating black)
+                           :moveTimes  (when display-move-times?
+                                         (map #(float (/ % 10))
+                                              (:moveTimes black)))}}
          :variant variant
          :result  result
 
-         :moves   (str/split moves #"\s")}
+         :moves   moves}
         (cond->
           analysis (assoc :analysis
                           (clostache/render-resource "templates/game-analysis.mustache"
                                                      {:white (:analysis white)
                                                       :black (:analysis black)})))
-     pgn->str)))
+     (pgn->str options))))

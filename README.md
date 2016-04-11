@@ -34,8 +34,11 @@ java -jar liPGN.jar -u Fins -p classical
   -s, --store <store>        plocal:db                   The store to use for keeping the data (use 'memory:tmp' for a transient run)
   -c, --color <color>                                    Handle games for the given color (white/black)
   -S, --no-sync                                          Don't sync the games with the server
+  -t, --with-times                                       Decorate the PGN with the move times
   -u, --username <username>                              The username for whom to retrieve the games
   -o, --output <file>                                    The file to output, use '-' for stdout. By default, output to '<username>.pgn'
+      --template-pgn <file>                              A file to use for templating the PGN (markdown format).
+      --template-move-pair <file>                        A file to use for templating a move pair (markdown format).
   -h, --help                                             Print this help
 ```
 
@@ -45,10 +48,38 @@ java -jar liPGN.jar -u Fins -p classical
 lein uberjar
 ```
 
+### Templating
+
+Templating is easily overridable using Markdown format and the vars returned by the Lichess API.
+
+#### Default PGN template
+```
+[Event "{{id}}"]
+[Site "{{speed}}"]
+[Date "{{date}}"]
+[Round "{{url}}"]
+[White "{{players.white.name}}"]
+[WhiteElo "{{players.white.elo}}"]
+[Black "{{players.black.name}}"]
+[BlackElo "{{players.black.elo}}"]
+[Variant "{{variant}}"]
+[Result "{{result}}"]
+
+{{moves}}{{analysis}}{{result}}
+
+```
+
+#### Default move-pair template
+```
+{{n}}. {{white}} {{black}}
+```
+
 ### Notes
 
 The standard behavior will create a ./db directory, hosting the local database (used to reduce exchanges with the lichess server).
 You can delete this directory to "flush caches".
+
+To get around this, you can use a transient DB (in RAM, won't be persistent) using `--store memory:tmp`
 
 ### Credits
 

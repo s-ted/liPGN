@@ -36,14 +36,18 @@
    ["-s" "--store <store>"       "The store to use for keeping the data (use 'memory:tmp' for a transient run)"    :default "plocal:db"]
    ["-c" "--color <color>"       "Handle games for the given color (white/black)"]
    ["-S" "--no-sync"             "Don't synchronize the games with the server"                                     :default false]
+   ["-t" "--with-times"          "Decorate the PGN with the move times"                                            :default false]
    ["-u" "--username <username>" "The username for whom to retrieve the games"]
    ["-o" "--output <file>"       "The file to output, use '-' for stdout. By default, output to '<username>.pgn'"]
+   [nil  "--template-pgn <file>"         "A file to use for templating the PGN (markdown format)."]
+   [nil  "--template-move-pair <file>"   "A file to use for templating a move pair (markdown format)."]
+
    ["-h" "--help"                "Print this help"]])
 
 (defn run [options]
   (->> [:quiet :url :casual :variant :output
         :speed :store :no-sync :username
-        :color]
+        :with-times :color :template-pgn :template-move-pair]
        (select-keys options)
        core/export!))
 

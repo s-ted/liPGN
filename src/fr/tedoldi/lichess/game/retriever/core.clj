@@ -14,7 +14,8 @@
 
 (defn export! [{:keys [quiet url casual variant speed
                        output store no-sync username
-                       color]}]
+                       color]
+                :as options}]
   (if (str/blank? username)
     (throw (Exception. "You must provide a username!"))
 
@@ -63,7 +64,11 @@
           console/print-err)
 
         (->> games
-             (pmap pgn/game->pgn)
+             (pmap #(pgn/game->pgn %
+                                   (select-keys options
+                                                [:with-times
+                                                 :template-pgn
+                                                 :template-move-pair])))
              clojure.string/join
              (spit out))
 
