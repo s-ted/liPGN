@@ -100,6 +100,7 @@
                                            (> timestamp since-timestamp)))))
 
                           (map #(-games-url->games url max-per-page % total-pages)))]
-      (lazy-cat
-        (sequence page-nb->game
-                  (range total-pages))))))
+      (flatten
+        (lazy-seq
+          (sequence page-nb->game
+                    (range total-pages)))))))
