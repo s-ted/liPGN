@@ -1,6 +1,9 @@
 Lichess game downloader
 ------------------------
 
+  [![Build Status](https://travis-ci.org/s-ted/liPGN.svg)](https://travis-ci.org/s-ted/liPGN)
+
+
 This program uses the lichess REST API to retrieve all the games of a
 user and transform them into a big PGN file that you can then import
 into your favourite game analysis tool (ie. scid)
@@ -87,6 +90,9 @@ You can delete this directory to "flush caches".
 
 To get around this, you can use a transient DB (in RAM, won't be persistent) using `--store memory:tmp`
 
-### Credits
+## License
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">liPGN</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="https://github.com/s-ted/liPGN" property="cc:attributionName" rel="cc:attributionURL">s-ted</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="https://github.com/s-ted/liPGN" rel="dct:source">https://github.com/s-ted/liPGN</a>.
+Copyright © 2016 [Sylvain Tedoldi](https://github.com/s-ted)
+
+Distributed under the Eclipse Public License either version 1.0 or
+(at your option) any later version.

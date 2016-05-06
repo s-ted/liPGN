@@ -1,6 +1,7 @@
 (defproject fr.tedoldi/liPGN "1.0.0-SNAPSHOT"
   :description  "Generate PGN file from lichess.org"
   :url          "https://github.com/s-ted/liPGN"
+  :author       "Sylvain Tedoldi"
   :license      {:name "Attribution-NonCommercial-ShareAlike 4.0 International"
                  :url  "http://creativecommons.org/licenses/by-sa/4.0/"}
   :dependencies [[org.clojure/clojure "1.8.0"]
