@@ -33,7 +33,7 @@
   :main         fr.tedoldi.lichess.game.retriever.main
   :omit-source true
 
-  :uberjar-name "libPGN.jar"
+  :uberjar-name "liPGN.jar"
 
   :profiles     {:dev
                  {:global-vars  {*warn-on-reflection* false

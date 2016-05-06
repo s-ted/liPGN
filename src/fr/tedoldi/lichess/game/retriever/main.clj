@@ -16,7 +16,7 @@
     \newline
     ["This program is uses the lichess REST API to retrieve all the games of a user and transform them into a big PGN file"
      ""
-     "Usage: java -jar libPGN.jar [options]"
+     "Usage: java -jar liPGN.jar [options]"
      ""
      "Options:"
      options-summary
