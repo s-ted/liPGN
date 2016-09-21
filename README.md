@@ -24,12 +24,12 @@ java -jar liPGN.jar -u thibault -p unlimited
 And if I want to prep for my next standard game against John Bartholomew:
 
 ```
-java -jar liPGN.jar -u Fins -p classical --speed classical,blitz
+java -jar liPGN.jar -u Fins --variant standard --speed classical,blitz
 ```
 
 And if I want to challenge JannLee:
 ```
-java -jar liPGN.jar -u JannLee -p crazyHouse --speed classical,blitz
+java -jar liPGN.jar -u JannLee --variant crazyHouse --speed classical,blitz
 ```
 
 ### Options
