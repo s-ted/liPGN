@@ -348,8 +348,6 @@
                    username
                    (.getIdentity (last items))))))
 
-       (catch java.lang.IllegalArgumentException e nil)
-
        (finally
          (.close db))))))
 
@@ -482,10 +480,11 @@
     [this collection id item]
     (let [id        id
           now       (t/now)
-          new-item  (merge item
-                           {:_id id
-                            :updatedAt now
-                            :createdAt now})]
+          new-item  (merge
+                      {:createdAt now}
+                      item
+                      {:_id       id
+                       :updatedAt now})]
 
       (let [db (pool->db config)]
         (try
@@ -568,7 +567,7 @@
 
     (let [query     (OSQLSynchQuery. (str "SELECT FROM game"
                                           " WHERE userId = ?"
-                                          " ORDER BY timestamp DESC"
+                                          " ORDER BY createdAt DESC"
                                           " LIMIT " 1)
                                      1)
           db        (pool->db config)]

@@ -79,7 +79,7 @@
       (clostache/render-resource "templates/pgn.mustache" template-vars))))
 
 
-(defn game->pgn [{:keys [id moves timestamp players winner
+(defn game->pgn [{:keys [id moves createdAt players winner
                          variant speed url analysis]}
                  {:keys [with-times] :as options}]
 
@@ -90,7 +90,7 @@
         black  (:black players)
         white  (:white players)
 
-        date   (->> timestamp
+        date   (->> createdAt
                     c/from-long
                     (f/unparse date-formatter))
 

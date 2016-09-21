@@ -30,7 +30,7 @@
 
 (defn export! [{:keys [quiet url casual variant speed
                        output store no-sync username
-                       color]
+                       refresh-all color]
                 :as options}]
   (if (str/blank? username)
     (throw (Exception. "You must provide a username!"))
@@ -47,8 +47,8 @@
       (dal/init dal)
 
       (if no-sync
-        (-> "By-passing sever sync\n" color/yellow console/print-err)
-        (game/update-user dal url username))
+        (-> "By-passing server sync\n" color/yellow console/print-err)
+        (game/update-user dal url username refresh-all))
 
 
       (-> (str "Crunching data, this may take a while...\n")
@@ -83,11 +83,11 @@
           console/print-err)
 
         (->> games
-             (pmap #(pgn/game->pgn %
-                                   (select-keys options
-                                                [:with-times
-                                                 :template-pgn
-                                                 :template-move-pair])))
+             (map #(pgn/game->pgn %
+                                  (select-keys options
+                                               [:with-times
+                                                :template-pgn
+                                                :template-move-pair])))
              clojure.string/join
              (spit out))
 

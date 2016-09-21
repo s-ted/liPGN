@@ -18,8 +18,8 @@
     [clojure.term.colors :as color]
     [fr.tedoldi.lichess.game.retriever.console :as console]))
 
-(def ^:private nice-downloader-waiting-time 300)
-(def ^:private even-nicer-downloader-waiting-time 30000)
+(def ^:private nice-downloader-waiting-time 1000)
+(def ^:private even-nicer-downloader-waiting-time 120000)
 
 (defn username->user [url username]
   (let [url (str url "/user/" username)]
@@ -66,7 +66,10 @@
     (catch Exception e
       (if (= 429 (:status (ex-data e)))
         (do
-          (-> (str "Lichess is rate-limiting us, waiting 30s...\n")
+          (-> (str "Lichess is rate-limiting us, waiting "
+                   (/ even-nicer-downloader-waiting-time
+                      1000)
+                   "s...\n")
               color/cyan
               console/print-err)
           (Thread/sleep even-nicer-downloader-waiting-time)
@@ -75,7 +78,7 @@
         ; else
         (throw e)))))
 
-(defn username->games [url username since-timestamp]
+(defn username->games [url username since-createdAt updater!]
   (let [max-per-page 100
         url          (str url "/user/" username "/games")
 
@@ -102,13 +105,15 @@
 
     (let [page-nb->game (comp
 
-                          (filter (fn [{:keys [timestamp]}]
+                          (filter (fn [{:keys [createdAt]}]
                                     (or
-                                      (nil? since-timestamp)
-                                      (and timestamp
-                                           (> timestamp since-timestamp)))))
+                                      (nil? since-createdAt)
+                                      (and createdAt
+                                           (> createdAt since-createdAt)))))
 
-                          (map #(-games-url->games url max-per-page % total-pages)))]
+                          (map #(-games-url->games url max-per-page % total-pages))
+
+                          (map #(map updater! %)))]
       (flatten
         (lazy-seq
           (sequence page-nb->game

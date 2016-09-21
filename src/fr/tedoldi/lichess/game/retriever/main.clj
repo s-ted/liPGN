@@ -44,6 +44,7 @@
    ["-U" "--url <URL>"           "URL of the API"                                                                  :default "http://en.lichess.org/api/"]
    ["-s" "--store <store>"       "The store to use for keeping the data (use 'memory:tmp' for a transient run)"    :default "plocal:db"]
    ["-c" "--color <color>"       "Handle games for the given color (white/black)"]
+   ["-R" "--refresh-all"         "Refresh all games, even if some are already in the local DB (useful if you break a previous import with Ctrl-C...)" :default false]
    ["-S" "--no-sync"             "Don't synchronize the games with the server"                                     :default false]
    ["-t" "--with-times"          "Decorate the PGN with the move times"                                            :default false]
    ["-u" "--username <username>" "The username for whom to retrieve the games"]
@@ -56,6 +57,7 @@
 (defn run [options]
   (->> [:quiet :url :casual :variant :output
         :speed :store :no-sync :username
+        :refresh-all
         :with-times :color :template-pgn :template-move-pair]
        (select-keys options)
        core/export!))

@@ -42,6 +42,7 @@ java -jar liPGN.jar -u JannLee -p crazyHouse --speed classical,blitz
   -U, --url <URL>            http://en.lichess.org/api/  URL of the API
   -s, --store <store>        plocal:db                   The store to use for keeping the data (use 'memory:tmp' for a transient run)
   -c, --color <color>                                    Handle games for the given color (white/black)
+  -R, --refresh-all                                      Refresh all games, even if some are already in the local DB (useful if you break a previous import with Ctrl-C...)
   -S, --no-sync                                          Don't sync the games with the server
   -t, --with-times                                       Decorate the PGN with the move times
   -u, --username <username>                              The username for whom to retrieve the games

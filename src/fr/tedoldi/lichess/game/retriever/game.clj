@@ -23,10 +23,10 @@
 
 (declare username->games)
 
-(defn last-game-timestamp [dal username]
-  (:timestamp (dal/username->last-game dal username)))
+(defn last-game-createdAt [dal username]
+  (:createdAt (dal/username->last-game dal username)))
 
-(defn update-user [dal url username]
+(defn update-user [dal url username refresh-all]
   (-> (str "Updating user " username " from server.\n")
       color/blue
       console/print-err)
@@ -39,11 +39,14 @@
         (lichess/username->user url)
         (f dal "user" username))
 
-    (let [last-game-timestamp (last-game-timestamp dal
-                                                   username)]
+    (let [last-game-createdAt (and
+                                (not refresh-all)
+
+                                (last-game-createdAt dal
+                                                     username))]
       (-> (str "Retrieving user " username " games from server since "
-               (if last-game-timestamp
-                 (->> last-game-timestamp
+               (if last-game-createdAt
+                 (->> last-game-createdAt
                       c/from-long
                       (f/unparse
                         (f/formatters :basic-date-time)))
@@ -52,19 +55,21 @@
           color/blue
           console/print-err)
 
-      (let [games (lichess/username->games url
+      (let [updater!
+            (fn [{:keys [id] :as game}]
+              (let [f (if (dal/find-by-id dal "game" id)
+                        dal/update!
+                        dal/create-with-id!)]
+                (f dal "game" id (assoc game
+                                        :userId username))))
+
+            games (lichess/username->games url
                                            username
-                                           last-game-timestamp)]
+                                           last-game-createdAt
+                                           updater!)]
         (-> (str "Found " (count games) " new games.\n")
             color/blue
-            console/print-err)
-
-        (doseq [{:keys [id] :as game} games]
-          (let [f (if (dal/find-by-id dal "game" id)
-                    dal/update!
-                    dal/create-with-id!)]
-            (f dal "game" id (assoc game
-                                    :userId username))))))))
+            console/print-err)))))
 
 (defn username->user [dal username]
   (dal/find-by-id dal "user" username))
