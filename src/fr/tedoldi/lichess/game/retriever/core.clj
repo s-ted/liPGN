@@ -30,7 +30,7 @@
 
 (defn export! [{:keys [quiet url casual variant speed
                        output store no-sync username
-                       refresh-all color]
+                       refresh-all color user-agent]
                 :as options}]
   (if (str/blank? username)
     (throw (Exception. "You must provide a username!"))
@@ -48,7 +48,7 @@
 
       (if no-sync
         (-> "By-passing server sync\n" color/yellow console/print-err)
-        (game/update-user dal url username refresh-all))
+        (game/update-user dal url username user-agent refresh-all))
 
 
       (-> (str "Crunching data, this may take a while...\n")

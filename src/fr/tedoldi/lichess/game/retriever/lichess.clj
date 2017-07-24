@@ -21,11 +21,11 @@
 (def ^:private nice-downloader-waiting-time 1000)
 (def ^:private even-nicer-downloader-waiting-time 120000)
 
-(defn username->user [url username]
+(defn username->user [url username user-agent]
   (let [url (str url "/user/" username)]
     (try
       (-> url
-          client/get
+          (client/get {:client-params {"http.useragent" user-agent}})
 
           :body
 
@@ -39,7 +39,7 @@
             e))))))
 
 
-(defn- -games-url->games [url max-per-page page total-pages]
+(defn- -games-url->games [url user-agent max-per-page page total-pages]
   (-> (str "Downloading page " (inc page) "/" total-pages ".\n")
       color/cyan
       console/print-err)
@@ -49,7 +49,8 @@
 
   (try
     (-> url
-        (client/get {:query-params
+        (client/get {:client-params {"http.useragent" user-agent}
+                     :query-params
                      {:nb             max-per-page
                       :page           (inc page)
                       :with_moves     1
@@ -73,17 +74,18 @@
               color/cyan
               console/print-err)
           (Thread/sleep even-nicer-downloader-waiting-time)
-          (-games-url->games url max-per-page page total-pages))
+          (-games-url->games url user-agent max-per-page page total-pages))
 
         ; else
         (throw e)))))
 
-(defn username->games [url username since-createdAt updater!]
+(defn username->games [url username user-agent since-createdAt updater!]
   (let [max-per-page 100
         url          (str url "/user/" username "/games")
 
         nb-results   (-> url
-                         (client/get {:query-params
+                         (client/get {:client-params {"http.useragent" user-agent}
+                                      :query-params
                                       {:nb   1
                                        :page 1}})
 
@@ -111,7 +113,7 @@
                                       (and createdAt
                                            (> createdAt since-createdAt)))))
 
-                          (map #(-games-url->games url max-per-page % total-pages))
+                          (map #(-games-url->games url user-agent max-per-page % total-pages))
 
                           (map #(map updater! %)))]
       (flatten

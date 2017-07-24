@@ -51,13 +51,14 @@
    ["-o" "--output <file>"       "The file to output, use '-' for stdout. By default, output to '<username>.pgn'"]
    [nil  "--template-pgn <file>"         "A file to use for templating the PGN (markdown format)."]
    [nil  "--template-move-pair <file>"   "A file to use for templating a move pair (markdown format)."]
+   [nil "--user-agent <user-agent" "A custom User Agent" :default "liPGN"]
 
    ["-h" "--help"                "Print this help"]])
 
 (defn run [options]
   (->> [:quiet :url :casual :variant :output
         :speed :store :no-sync :username
-        :refresh-all
+        :refresh-all :user-agent
         :with-times :color :template-pgn :template-move-pair]
        (select-keys options)
        core/export!))

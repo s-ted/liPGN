@@ -21,12 +21,10 @@
     [fr.tedoldi.lichess.game.retriever.lichess :as lichess]
     [fr.tedoldi.lichess.game.retriever.orientdb :as dal]))
 
-(declare username->games)
-
 (defn last-game-createdAt [dal username]
   (:createdAt (dal/username->last-game dal username)))
 
-(defn update-user [dal url username refresh-all]
+(defn update-user [dal url username user-agent refresh-all]
   (-> (str "Updating user " username " from server.\n")
       color/blue
       console/print-err)
@@ -35,9 +33,9 @@
             dal/update!
             dal/create-with-id!)]
 
-    (->> username
-        (lichess/username->user url)
-        (f dal "user" username))
+    (->>
+      (lichess/username->user url username user-agent)
+      (f dal "user" username))
 
     (let [last-game-createdAt (and
                                 (not refresh-all)
@@ -65,6 +63,7 @@
 
             games (lichess/username->games url
                                            username
+                                           user-agent
                                            last-game-createdAt
                                            updater!)]
         (-> (str "Found " (count games) " new games.\n")
