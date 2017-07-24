@@ -12,6 +12,7 @@
     [clj-time.coerce :as coerce]
     [clj-time.core :as t]
     clojure.data
+    [clojure.string :as str]
     [clojure.data.json :as json])
   (:import (java.io PrintWriter)
 
@@ -262,7 +263,6 @@
         "dummy"
         {:username "dummy"})
       (-execute db "CREATE INDEX user._id ON user (_id) UNIQUE")
-      (-execute db "CREATE INDEX user.username ON user (username) UNIQUE")
 
       (-execute db "CREATE CLASS game")
       (-execute db "CREATE PROPERTY game._id STRING")
@@ -273,7 +273,15 @@
         "dummy"
         {:username "dummy"})
       (-execute db "CREATE INDEX game._id ON game (_id) UNIQUE")
-      (-execute db "CREATE INDEX game.username ON game (username) UNIQUE")
+
+      (finally
+        (.close db)))))
+
+(defn- -update-db [Dal]
+  (let [db (pool->db (:config Dal))]
+    (try
+      (-execute db "DROP INDEX user.username ON user (_id) UNIQUE")
+      (-execute db "DROP INDEX game.username ON game (_id) UNIQUE")
 
       (finally
         (.close db)))))
@@ -329,7 +337,7 @@
    (let [page-size 100
          query     (OSQLSynchQuery. (str "SELECT FROM game"
                                          " WHERE "
-                                         "       userId = ?"
+                                         "       userId.toLowerCase() = ?"
                                          "   AND @rid > " lower-rid
                                          " LIMIT " page-size)
                                     page-size)
@@ -340,7 +348,7 @@
                      (-> db
                          .activateOnCurrentThread
 
-                         (.query ^OSQLSynchQuery query (to-array [username]))))]
+                         (.query ^OSQLSynchQuery query (to-array [(str/lower-case username)]))))]
          (when items
            (cons items
                  (-username->games-paginated
@@ -410,6 +418,8 @@
         (do
           (.create (ODatabaseDocumentTx. store))
           (initialize-blank-db this))))
+
+    (-update-db this)
 
     this)
 
@@ -566,7 +576,7 @@
     [this username]
 
     (let [query     (OSQLSynchQuery. (str "SELECT FROM game"
-                                          " WHERE userId = ?"
+                                          " WHERE userId.toLowerCase() = ?"
                                           " ORDER BY createdAt DESC"
                                           " LIMIT " 1)
                                      1)
@@ -575,7 +585,7 @@
         (-> db
             .activateOnCurrentThread
 
-            (.query ^OSQLSynchQuery query (to-array [username]))
+            (.query ^OSQLSynchQuery query (to-array [(str/lower-case username)]))
             seq
             first
             (#(when %

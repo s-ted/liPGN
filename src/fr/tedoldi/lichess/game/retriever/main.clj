@@ -14,6 +14,7 @@
 
     [environ.core :as env]
 
+    [clojure.string :as str]
     [clojure.tools.cli :as cli]
     [clojure.term.colors :as color])
   (:gen-class))
@@ -56,12 +57,14 @@
    ["-h" "--help"                "Print this help"]])
 
 (defn run [options]
-  (->> [:quiet :url :casual :variant :output
-        :speed :store :no-sync :username
-        :refresh-all :user-agent
-        :with-times :color :template-pgn :template-move-pair]
-       (select-keys options)
-       core/export!))
+  (-> options
+      (select-keys
+        [:quiet :url :casual :variant :output
+         :speed :store :no-sync :username
+         :refresh-all :user-agent
+         :with-times :color :template-pgn :template-move-pair])
+      (update :username str/lower-case)
+      core/export!))
 
 (defn -main [& args]
   (try
