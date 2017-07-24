@@ -21,11 +21,33 @@
 (def ^:private nice-downloader-waiting-time 1000)
 (def ^:private even-nicer-downloader-waiting-time 120000)
 
+
+(defn http-get [url options]
+  (try
+
+    (client/get url options)
+
+    (catch Exception e
+      (if (= 429 (:status (ex-data e)))
+        (do
+          (-> (str "Lichess is rate-limiting us, waiting "
+                   (/ even-nicer-downloader-waiting-time
+                      1000)
+                   "s...\n")
+              color/cyan
+              console/print-err)
+          (Thread/sleep even-nicer-downloader-waiting-time)
+          (http-get url options))
+
+        ; else
+        (throw e)))))
+
 (defn username->user [url username user-agent]
   (let [url (str url "/user/" username)]
     (try
       (-> url
-          (client/get {:client-params {"http.useragent" user-agent}})
+          (http-get
+            {:client-params {"http.useragent" user-agent}})
 
           :body
 
@@ -49,14 +71,15 @@
 
   (try
     (-> url
-        (client/get {:client-params {"http.useragent" user-agent}
-                     :query-params
-                     {:nb             max-per-page
-                      :page           (inc page)
-                      :with_moves     1
-                      :with_movetimes 1
-                      :with_opening   1
-                      :with_analysis  1}})
+        (http-get
+          {:client-params {"http.useragent" user-agent}
+           :query-params
+           {:nb             max-per-page
+            :page           (inc page)
+            :with_moves     1
+            :with_movetimes 1
+            :with_opening   1
+            :with_analysis  1}})
 
         :body
 
@@ -84,10 +107,11 @@
         url          (str url "/user/" username "/games")
 
         nb-results   (-> url
-                         (client/get {:client-params {"http.useragent" user-agent}
-                                      :query-params
-                                      {:nb   1
-                                       :page 1}})
+                         (http-get
+                           {:client-params {"http.useragent" user-agent}
+                            :query-params
+                            {:nb   1
+                             :page 1}})
 
                          :body
 
