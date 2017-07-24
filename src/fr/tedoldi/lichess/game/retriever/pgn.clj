@@ -94,7 +94,7 @@
                     c/from-long
                     (f/unparse date-formatter))
 
-        moves  (str/split moves #"\s")
+        moves  (str/split (or moves "") #"\s")
 
         display-move-times? (and
                               with-times

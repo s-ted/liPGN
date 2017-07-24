@@ -63,7 +63,11 @@
                     username
                     #(and
                        (if color
-                         (= username (get-in % [:players (keyword color) :userId]))
+                         (= (str/lower-case (or username ""))
+                            (str/lower-case
+                              (or
+                                (get-in % [:players (keyword color) :userId])
+                                "")))
                          true)
 
                        (if casual
