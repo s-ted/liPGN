@@ -280,8 +280,8 @@
 (defn- -update-db [Dal]
   (let [db (pool->db (:config Dal))]
     (try
-      (-execute db "DROP INDEX user.username ON user (_id) UNIQUE")
-      (-execute db "DROP INDEX game.username ON game (_id) UNIQUE")
+      (-execute db "DROP INDEX user.username")
+      (-execute db "DROP INDEX game.username")
 
       (finally
         (.close db)))))

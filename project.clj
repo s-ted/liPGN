@@ -4,30 +4,31 @@
   :author       "Sylvain Tedoldi"
   :license      {:name "Attribution-NonCommercial-ShareAlike 4.0 International"
                  :url  "http://creativecommons.org/licenses/by-sa/4.0/"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
 
-                 [cheshire "5.5.0"]
+                 [cheshire "5.8.0"]
                  [org.clojure/data.json "0.2.6"]
 
                  [de.ubercode.clostache/clostache "1.4.0"]
 
-                 [org.clojure/tools.cli "0.3.1"]
-                 [clojure-term-colors "0.1.0-SNAPSHOT"]
+                 [org.clojure/tools.cli "0.3.5"]
+                 [clojure-term-colors "0.1.0"]
 
-                 [com.taoensso/timbre "4.3.1"]
+                 [com.taoensso/timbre "4.10.0"]
 
-                 [clj-http "2.1.0"]
+                 [clj-http "3.8.0"]
 
-                 [clj-time "0.11.0"]
+                 [clj-time "0.14.2"]
 
                  [environ "1.0.2"]
 
-                 [com.orientechnologies/orientdb-core   "2.1.13"]
-                 [com.orientechnologies/orientdb-server "2.1.13"]]
+                 [com.orientechnologies/orientdb-core   "2.2.33"]
+                 [com.orientechnologies/orientdb-server "2.2.33"]]
 
   :plugins      [[lein-environ "1.0.2"]]
 
-  :global-vars  {*assert* false}
+  :global-vars  {*warn-on-reflection* false
+                 *assert* false}
 
   :source-paths ["src" "resources"]
   :test-paths   ["test" "test-resources"]
@@ -39,7 +40,7 @@
   :profiles     {:dev
                  {:global-vars  {*warn-on-reflection* false
                                  *assert*             true}
-                  :dependencies [[midje "1.8.3"]]
+                  :dependencies [[midje "1.9.1"]]
                   :plugins      [[lein-midje "3.2"]]
                   :injections   [(use 'midje.repl)]
                   :env          {:dev "true"}}
