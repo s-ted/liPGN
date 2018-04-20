@@ -1,3 +1,26 @@
+DEPRECATION NOTICE
+==================
+
+Since a couple of days, nothing get downloaded because of the instantly appearing `Lichess is rate-limiting us, waiting 120s ...` message (see #11).
+
+Having check with Thibault (lichess main dev) :
+
+> that API is still supported but it's being hammered so hard, it has hit the global rate limit :("
+
+this means that _lichess_ has closed this path, and thus, liPGN will **never work again as-is** without quite a heavy code refactoring...
+
+But Thibault also give you a new way of doing it, directly via the lichess API (thus without having to use liPGN) : https://lichess.org/api#operation/gamesExportUsername
+
+This new API simply means that *liPGN is not needed anymore* ! and that anyone can use it on it's own to retrieve directly a PGN formatted file.
+Though, advanced filtering and local data caching, that liPGN was providing, won't be available anymore...
+
+
+I am not planning on moving liPGN to the new lichess API as it is not really suited for parsing (JSON format has been replaced by a plain flat PGN format).
+
+> So Long and Thanks for all the Fish.
+
+
+
 Lichess game downloader
 ------------------------
 
